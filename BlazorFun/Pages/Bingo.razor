@@ -1,0 +1,100 @@
+﻿@page "/bingo"
+
+@using BlazorFun.Models.Bingo
+@inject HttpClient Http
+
+<div class="container">
+    <table id="bingo-board">
+        <thead>
+            <tr>
+                <td colspan="5">
+                </td>
+            </tr>
+            <tr>
+                <td>R</td>
+                <td>E</td>
+                <td>T</td>
+                <td>R</td>
+                <td>O</td>
+            </tr>
+            <tr>
+                <th>B</th>
+                <th>I</th>
+                <th>N</th>
+                <th>G</th>
+                <th>O</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Game.IsInitialized)
+            {
+                for (int row = 0; row < 5; row++)
+                {
+                    <tr>
+                        @for (int col = 0; col < 5; col++)
+                        {
+                            var bingoSquare = Game.Squares[row, col];
+                            <td class="bingo-square @(bingoSquare.IsWinner ? "bg-success" : bingoSquare.IsChecked ? "bg-primary" : "")" @onclick="@(() => OnSquareClicked(bingoSquare))">
+                                <span>
+                                    @(bingoSquare.Name)
+                                </span>
+                            </td>
+                        }
+                    </tr>
+                }
+            }
+            else
+            {
+                for (int row = 0; row < 5; row++)
+                {
+                    <tr>
+                        @for (int col = 0; col < 5; col++)
+                        {
+                            <td class="bingo-square">
+                                <span>
+                                    ???
+                                </span>
+                            </td>
+                        }
+                    </tr>
+                }
+
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="5">
+                    @if (!Game.IsInitialized)
+                    {
+                        <button class="btn btn-primary w-100 mt-2" @onclick="OnStart">Start</button>
+                    }
+                    @if (Game.IsWinner)
+                    {
+                        <button class="btn btn-success w-100 mt-2" @onclick="OnStart">Reset</button>
+                    }
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+@code
+{
+    public Game Game { get; } = new Game();
+    private List<string> categories;
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = await Http.GetJsonAsync<List<string>>("data/categories.json");
+    }
+
+    private void OnStart()
+    {
+        Game.SetCategories(categories);
+    }
+
+    private void OnSquareClicked(Square square)
+    {
+        Game.SelectSquare(square);
+    }
+}
